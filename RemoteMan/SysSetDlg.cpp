@@ -8,6 +8,15 @@
 
 #define IDC_CHECKBOX   (0x2000) // 控件的ID号
 
+static int GetDpiScale(int v)
+{
+	HDC hDC = ::GetDC(NULL);
+	int dpi = GetDeviceCaps(hDC, LOGPIXELSX);
+	::ReleaseDC(NULL, hDC);
+	if (dpi <= 0) dpi = 96;
+	return MulDiv(v, dpi, 96);
+}
+
 // CSysSetDlg 对话框
 
 IMPLEMENT_DYNAMIC(CSysSetDlg, CDialogEx)
@@ -69,14 +78,14 @@ BOOL CSysSetDlg::OnInitDialog()
 	int n=0;
 	char Buf[128];
 	RECT Rect;
-	CONST UINT MAX_CHECKBOX_WIDTH = 30;  // 定义CheckBox的宽度
+	CONST UINT MAX_CHECKBOX_WIDTH = GetDpiScale(30);  // 定义CheckBox的宽度
 
 	CDialogEx::OnInitDialog();
 	// TODO:  在此添加额外的初始化
 	GetDlgItem(IDC_COMBO_MST_COLOR)->GetWindowRect(&Rect);
 	ScreenToClient(&Rect);
-	Rect.top+=28;
-	Rect.bottom+=28;
+	Rect.top+=GetDpiScale(28);
+	Rect.bottom+=GetDpiScale(28);
 
 	//形式是这样: "C:\<NULL>D:\<NULL>E:\<NULL><NULL>" 
 	GetLogicalDriveStrings(sizeof(Buf),Buf);
@@ -88,7 +97,7 @@ BOOL CSysSetDlg::OnInitDialog()
 		if (m_MstDriveStr.Find(s[0])>=0)
 			DriveCheck[n].SetCheck(TRUE);
 		n++;
-		Rect.left+=MAX_CHECKBOX_WIDTH+10;
+		Rect.left+=MAX_CHECKBOX_WIDTH+GetDpiScale(10);
 	}
 
 	return TRUE;  // return TRUE unless you set the focus to a control
