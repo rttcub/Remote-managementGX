@@ -83,7 +83,7 @@ COMMIT;\r\n\
 // 用于应用程序“关于”菜单项的 CAboutDlg 对话框
 
 //默认列表框宽度
-static int const ListDefColumnWidth[]={85,160,135,55,100,37};
+static int const ListDefColumnWidth[]={90,200,150,60,120,70};
 
 class CAboutDlg : public CDialogEx
 {
@@ -670,12 +670,22 @@ BOOL CRemoteManDlg::OnInitDialog()
 
 	m_List.SetExtendedStyle(LVS_EX_FULLROWSELECT|LVS_EX_GRIDLINES);
 	m_List.SetImageList(&m_ImageList,LVSIL_SMALL);
-	m_List.InsertColumn(0,"类型",LVCFMT_LEFT,ListDefColumnWidth[0]);
-	m_List.InsertColumn(1,"服务器名称",LVCFMT_LEFT,ListDefColumnWidth[1]);
-	m_List.InsertColumn(2,"主机",LVCFMT_LEFT,ListDefColumnWidth[2]);
-	m_List.InsertColumn(3,"端口",LVCFMT_LEFT,ListDefColumnWidth[3]);
-	m_List.InsertColumn(4,"账户",LVCFMT_LEFT,ListDefColumnWidth[4]);
-	m_List.InsertColumn(5,"状态",LVCFMT_LEFT,ListDefColumnWidth[5]);
+	m_List.InsertColumn(0,"类型",LVCFMT_LEFT,GetDpiScale(ListDefColumnWidth[0]));
+	m_List.InsertColumn(1,"服务器名称",LVCFMT_LEFT,GetDpiScale(ListDefColumnWidth[1]));
+	m_List.InsertColumn(2,"主机",LVCFMT_LEFT,GetDpiScale(ListDefColumnWidth[2]));
+	m_List.InsertColumn(3,"端口",LVCFMT_LEFT,GetDpiScale(ListDefColumnWidth[3]));
+	m_List.InsertColumn(4,"账户",LVCFMT_LEFT,GetDpiScale(ListDefColumnWidth[4]));
+	m_List.InsertColumn(5,"状态",LVCFMT_LEFT,GetDpiScale(ListDefColumnWidth[5]));
+
+	//根据列表实际宽度按比例分配各列宽度，避免高DPI下拥挤、信息显示不全
+	CRect ListRt;
+	m_List.GetClientRect(&ListRt);
+	int SumWidth=0;
+	for (int i=0; i<sizeof(ListDefColumnWidth)/sizeof(ListDefColumnWidth[0]); i++)
+		SumWidth+=ListDefColumnWidth[i];
+	int ListWidth=ListRt.Width()-GetDpiScale(25);	//25:滚动条宽度
+	for (int i=0; i<sizeof(ListDefColumnWidth)/sizeof(ListDefColumnWidth[0]); i++)
+		m_List.SetColumnWidth(i,ListWidth*ListDefColumnWidth[i]/SumWidth);
 
 	((CButton*)GetDlgItem(IDC_CHECK_MST_SHOW_WALLPAPER))->SetCheck(SysConfig.MstscDeskImg);
 	((CButton*)GetDlgItem(IDC_CHECK_MST_DRIVE))->SetCheck(SysConfig.MstscUseDrive);
