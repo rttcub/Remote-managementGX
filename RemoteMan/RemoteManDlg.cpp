@@ -14,6 +14,15 @@
 
 #pragma comment(lib, "Crypt32.lib")
 
+static int GetDpiScale(int v)
+{
+	HDC hDC = ::GetDC(NULL);
+	int dpi = GetDeviceCaps(hDC, LOGPIXELSX);
+	::ReleaseDC(NULL, hDC);
+	if (dpi <= 0) dpi = 96;
+	return MulDiv(v, dpi, 96);
+}
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -560,19 +569,19 @@ END_MESSAGE_MAP()
 // CRemoteManDlg 消息处理程序
 void CRemoteManDlg::InitToolBar(void)
 {
-	m_ToolbarImageList.Create(32,32,ILC_COLOR24|ILC_MASK,1,1);
+	int nImg = GetDpiScale(32);
+	m_ToolbarImageList.Create(nImg, nImg, ILC_COLOR24|ILC_MASK, 1, 1);
 	m_ToolbarImageList.SetBkColor(RGB(255,255,255));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_ADDNODE));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_DELNODE));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_PC));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_EDIT));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_DEL));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_OPEN));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDR_MAINFRAME));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_RADMIN));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_SSH));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_REALVNC));
-	m_ToolbarImageList.Add(AfxGetApp()->LoadIcon(IDI_SET));
+	UINT const IconIds[] = { IDI_ADDNODE, IDI_DELNODE, IDI_PC, IDI_EDIT, IDI_DEL, IDI_OPEN, IDR_MAINFRAME, IDI_RADMIN, IDI_SSH, IDI_REALVNC, IDI_SET };
+	for (int i = 0; i < sizeof(IconIds)/sizeof(IconIds[0]); i++)
+	{
+		HICON hIcon = (HICON)::LoadImage(AfxGetApp()->m_hInstance, MAKEINTRESOURCE(IconIds[i]), IMAGE_ICON, nImg, nImg, LR_DEFAULTCOLOR);
+		if (hIcon != NULL)
+		{
+			m_ToolbarImageList.Add(hIcon);
+			::DestroyIcon(hIcon);
+		}
+	}
 
 	UINT array[14]={ID_MENU_ADDGROUP,ID_MENU_DELGROUP,ID_SEPARATOR,
 					ID_MENU_ADDHOST,ID_MENU_EDITHOST,ID_MENU_DELHOST,ID_SEPARATOR,
@@ -593,9 +602,9 @@ void CRemoteManDlg::InitToolBar(void)
 	m_ToolBar.SetButtonText(13,"设置");
 
 	m_ToolBar.GetToolBarCtrl().SetImageList(&m_ToolbarImageList);
-	m_ToolBar.SetSizes(CSize(70,56),CSize(32,32));
+	m_ToolBar.SetSizes(CSize(GetDpiScale(70), GetDpiScale(56)), CSize(nImg, nImg));
 
-	m_ToolBar.MoveWindow(CRect(0,-1,820,62));	//移动工具栏在父窗口的位置
+	m_ToolBar.MoveWindow(CRect(0,-1,GetDpiScale(820),GetDpiScale(62)));	//移动工具栏在父窗口的位置
 	m_ToolBar.ShowWindow(SW_SHOW);				//显示工具栏
 
 	//使能下拉箭头
@@ -2437,7 +2446,7 @@ void CRemoteManDlg::OnSize(UINT nType, int cx, int cy)
 		CWnd *p=GetDlgItem(RIGHT_CTRL_IDS[i]);
 		p->GetWindowRect(rt);
 		ScreenToClient(rt);
-		if (offset==INT_MAX) offset=cx-96-rt.left;	//第一个控件的位置相对右边为96
+		if (offset==INT_MAX) offset=cx-GetDpiScale(96)-rt.left;	//第一个控件的位置相对右边为96
 	//	TRACE("Top=%d,Bottom=%d,Left=%d,Right=%d\r\n",rt.top,rt.bottom,rt.left,rt.right);
 		rt.OffsetRect(offset,0);
 		p->MoveWindow(rt);
@@ -2446,16 +2455,16 @@ void CRemoteManDlg::OnSize(UINT nType, int cx, int cy)
 	//左边界开始为4，中间空5，右边界CX-139,底部空3
 	GetDlgItem(IDC_TREE1)->GetWindowRect(rt);
 	ScreenToClient(rt);
-	int TreeWidth=(cx-148)*184/(184+597);
+	int TreeWidth=(cx-GetDpiScale(148))*184/(184+597);
 	rt.right=rt.left+TreeWidth;
-	rt.bottom=cy-3;
+	rt.bottom=cy-GetDpiScale(3);
 	GetDlgItem(IDC_TREE1)->MoveWindow(rt);
 	//列表框,底部空136
-	rt.left=rt.right+5;
-	rt.right=cx-139;
-	rt.bottom=cy-136;
+	rt.left=rt.right+GetDpiScale(5);
+	rt.right=cx-GetDpiScale(139);
+	rt.bottom=cy-GetDpiScale(136);
 	GetDlgItem(IDC_LIST1)->MoveWindow(rt);
-	int ListWidth=rt.right-rt.left-25;		//25:滚动条宽度
+	int ListWidth=rt.right-rt.left-GetDpiScale(25);		//25:滚动条宽度
 	//调整列宽
 	int Sum=0;
 	for (int i=0; i<sizeof(ListDefColumnWidth)/sizeof(ListDefColumnWidth[0]); i++)
@@ -2464,26 +2473,26 @@ void CRemoteManDlg::OnSize(UINT nType, int cx, int cy)
 		m_List.SetColumnWidth(i,ListWidth*ListDefColumnWidth[i]/Sum);
 
 	//用于搜索的两个控件,底部偏差：104, 上部空：7, 编辑框右边空:109
-	rt.right-=109;
-	rt.top=rt.bottom+7;
-	rt.bottom=rt.top+25;		//高度为25
+	rt.right-=GetDpiScale(109);
+	rt.top=rt.bottom+GetDpiScale(7);
+	rt.bottom=rt.top+GetDpiScale(25);		//高度为25
 	m_SearchEdit.MoveWindow(rt);
 	//按钮
-	rt.left=rt.right+12;
-	rt.right=rt.left+88;
+	rt.left=rt.right+GetDpiScale(12);
+	rt.right=rt.left+GetDpiScale(88);
 	GetDlgItem(IDC_BTN_SEARCH)->MoveWindow(rt);
 
 	//主机说明的组控件,
-	rt.left=4+TreeWidth+5;
-	rt.right=cx-139;
-	rt.top=cy-98;
-	rt.bottom=cy-3;
+	rt.left=GetDpiScale(4)+TreeWidth+GetDpiScale(5);
+	rt.right=cx-GetDpiScale(139);
+	rt.top=cy-GetDpiScale(98);
+	rt.bottom=cy-GetDpiScale(3);
 	GetDlgItem(IDC_STATIC_GROUP3)->MoveWindow(rt);
 	//主机说明的EDIT控件
-	rt.left+=12;
-	rt.right-=13;
-	rt.top+=23;
-	rt.bottom-=12;
+	rt.left+=GetDpiScale(12);
+	rt.right-=GetDpiScale(13);
+	rt.top+=GetDpiScale(23);
+	rt.bottom-=GetDpiScale(12);
 	GetDlgItem(IDC_EDIT_README)->MoveWindow(rt);
 	//
 	Invalidate();		//有残影要重绘
