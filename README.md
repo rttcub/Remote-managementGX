@@ -21,8 +21,3 @@ RADMIN主机的右键菜单中加入完全控制、仅限查看、文件传送�
 -
 1. 在 GitHub 的 Releases 页面下载最新版本压缩包（如 RemoteMan-v2.0.3-x86.zip）。  
 2. 解压后直接运行 RemoteMan.exe 即可（压缩包已内置所需运行库，无需单独安装）。  
-3. 可选：default.rar 中包含 Radmin 和 VNC 客户端，解压到 RemoteMan.exe 同一目录下即可使用。
-
-编译器：  
--
-VC2017  
